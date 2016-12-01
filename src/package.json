@@ -1,0 +1,17 @@
+{
+  "name": "mars-rover-mission",
+  "version": "0.0.1",
+  "description": "Mars Rover Mission Alexa Skill",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "alexa"
+  ],
+  "author": "KJH Software LLC",
+  "license": "ISC",
+  "dependencies": {
+    "alexa-sdk": "^1.0.6"
+  }
+}

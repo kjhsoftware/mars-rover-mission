@@ -1,0 +1,46 @@
+{
+    "intents": [
+        {
+            "intent": "WaypointIntent",
+            "slots": [
+                {
+                    "name": "Waypoint",
+                    "type": "LIST_OF_CODES"
+                }
+            ]
+        },
+        {
+            "intent": "OverrideWaypointIntent",
+            "slots": [
+                {
+                    "name": "Waypoint",
+                    "type": "LIST_OF_CODES"
+                }
+            ]
+        },
+        {
+            "intent": "StatusIntent"
+        },
+        {
+            "intent": "OverrideTimeIntent"
+        },
+        {
+            "intent": "AMAZON.HelpIntent"
+        },
+        {
+            "intent": "AMAZON.YesIntent"
+        },
+        {
+            "intent": "AMAZON.NoIntent"
+        },
+        {
+            "intent": "AMAZON.StopIntent"
+        },
+        {
+            "intent": "AMAZON.CancelIntent"
+        },
+        {
+            "intent": "AMAZON.RepeatIntent"
+        }
+    ]
+}

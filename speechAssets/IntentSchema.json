@@ -22,6 +22,9 @@
             "intent": "StatusIntent"
         },
         {
+            "intent": "ResetIntent"
+        },
+        {
             "intent": "OverrideTimeIntent"
         },
         {

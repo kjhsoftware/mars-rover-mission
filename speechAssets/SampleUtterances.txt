@@ -1,13 +1,16 @@
 AMAZON.YesIntent affirmative
 AMAZON.YesIntent that's affirmative
+AMAZON.YesIntent that is affirmative
 AMAZON.YesIntent that's affirm
 AMAZON.NoIntent negative
 AMAZON.NoIntent that's negative
+AMAZON.NoIntent that is negative
 
 StatusIntent status
 StatusIntent the status
 StatusIntent current status
 StatusIntent mission status
+StatusIntent the mission status
 StatusIntent tell me the mission status
 StatusIntent rover status
 StatusIntent control rover
@@ -33,3 +36,11 @@ OverrideWaypointIntent override Mike Alpha Papa waypoint {Waypoint}
 
 OverrideTimeIntent override code Sierra Oscar Lima
 OverrideTimeIntent override Sierra Oscar Lima
+
+ResetIntent abort mission
+ResetIntent reset game
+ResetIntent start game over
+ResetIntent start over
+ResetIntent restart game
+ResetIntent abandon game
+ResetIntent abandon rover

@@ -9,6 +9,7 @@ var states = {
     NONE: '',
     INFOMODE: '_INFOMODE',
     BRIEFINGMODE: '_BRIEFINGMODE',
+    RESETMODE: '_RESETMODE',
     WAYPOINTMODE: '_WAYPOINTMODE' 
 };
 
@@ -31,11 +32,15 @@ function martianDuration(startTime, endTime) {
 }
 
 var newSessionHandlers = {
+    'LaunchRequest': function() {
+       this.emit('NewSession');
+    },
 
     'NewSession': function() {
         if (Object.keys(this.attributes).length === 0) {
             // first time the skill has been invoked?
             this.attributes['currentWaypoint'] = 'Alpha';
+            this.attributes['visitedWaypoints'] = [];
         }
         var p = Data.phrases;
         var message = `${p.INTRO_SOUND} ${p.WELCOME_PRE} ${p.WELCOME} ${p.WELCOME_PROMPT}`;
@@ -71,9 +76,21 @@ var newSessionHandlers = {
         this.emit('AMAZON.NoIntent');
     },
     'AMAZON.HelpIntent': function () {
-        var message = Data.phrases.HELP;
-        this.emit(':ask', message, message);
-    }
+        var message = Data.phrases.HELP + Data.phrases.WELCOME_PROMPT;
+        this.emit(':ask', message, Data.phrases.WELCOME_REPROMPT);
+    },
+
+    'EndMission': function() {
+        this.attributes['currentWaypoint'] = 'Alpha';
+        this.attributes['visitedWaypoints'] = [];
+        delete this.attributes['targetWaypoint'];
+        delete this.attributes['startTime'];
+        delete this.attributes['lastTime'];
+        delete this.attributes['STATE'];
+        this.emit(':saveState', true);
+
+        this.emit(':tell', Data.phrases.MISSION_RESET_ACK + Data.phrases.INTRO_SOUND + Data.phrases.GOODBYE);
+    },
 };
 
 // setup user with background information
@@ -113,6 +130,25 @@ var briefingModeHandlers = Alexa.CreateStateHandler(states.BRIEFINGMODE, {
 
 });
 
+var resetModeHandlers = Alexa.CreateStateHandler(states.RESETMODE, {
+
+    // user launched skill into reset mode
+    'LaunchRequest': function() {
+        this.handler.state = states.WAYPOINTMODE;
+        this.emitWithState('StatusIntent');
+    },
+
+    'AMAZON.YesIntent': function() {
+        this.handler.state = states.NONE;
+        this.emitWithState('EndMission');
+    },
+
+    'Unhandled': function() {
+        this.handler.state = states.WAYPOINTMODE;
+        this.emitWithState('StatusIntent');
+    }
+});
+
 var waypointModeHandlers = Alexa.CreateStateHandler(states.WAYPOINTMODE, {
 
     'LaunchRequest': function() {
@@ -127,6 +163,8 @@ var waypointModeHandlers = Alexa.CreateStateHandler(states.WAYPOINTMODE, {
         var missionDuration = martianDuration(this.attributes['startTime'], Date.now());
         var turnDuration = martianDuration(this.attributes['lastTime'], Date.now());
 
+        var message;
+
         // check elpased duration
         if (target && turnDuration.days > 0) {
             current = this.attributes['currentWaypoint'] = target;
@@ -135,15 +173,23 @@ var waypointModeHandlers = Alexa.CreateStateHandler(states.WAYPOINTMODE, {
         }
 
         if (target) {
-            var message = Data.phrasebuilder.EN_ROUTE(current, target) +
+            var cardContent = Data.phrasebuilder.EN_ROUTE(current, target) +
                 Data.phrasebuilder.LAST_TURN(turnDuration);
+            message = cardContent +
+                Data.phrases.INTRO_SOUND + Data.phrases.GOODBYE;
 
             var cardTitle = `Mission Status (Sol ${missionDuration.days+1} ${missionDuration.hours}h ${missionDuration.minutes}m)`;
-            this.emit(':askWithCard', message, Data.phrases.MISSION_ACCEPT_REPROMPT, cardTitle, message);
+            this.emit(':tellWithCard', message, cardTitle, cardContent);
         } else {
 
             var loc = Data.waypoints[current];
-            var message = Data.phrasebuilder.AT_WAYPOINT(current);
+            if (this.attributes['visitedWaypoints'].includes(current)) {
+                message = Data.phrasebuilder.AT_WAYPOINT(current);
+            } else {
+                this.attributes['visitedWaypoints'].push(current);
+                message = Data.phrasebuilder.ARRIVE_WAYPOINT(current, Data.waypoints[current].report);
+            }
+
             for (let key of Object.keys(loc.options)) {
                 var option = loc.options[key];
                 message = message + ' ' + Data.phrasebuilder.SEE_WAYPOINT(option.direction, option.qualifier, Data.waypoints[key].label, key);
@@ -171,9 +217,10 @@ var waypointModeHandlers = Alexa.CreateStateHandler(states.WAYPOINTMODE, {
             this.attributes['lastTime'] = Date.now();
             this.attributes['targetWaypoint'] = target;
             this.emit(':saveState', true);
-            var message = Data.phrasebuilder.EN_ROUTE(current, target) +
-                Data.phrases.BEEP_SOUND;
-            this.emit(':ask', message, message);
+            var message = Data.phrases.BEEP_SOUND +
+                Data.phrasebuilder.EN_ROUTE(current, target) +
+                Data.phrases.INTRO_SOUND + Data.phrases.GOODBYE;
+            this.emit(':tell', message);
         } else {
             this.emitWithState('Unhandled');
         }
@@ -199,6 +246,12 @@ var waypointModeHandlers = Alexa.CreateStateHandler(states.WAYPOINTMODE, {
         
         this.emitWithState('StatusIntent');
     },
+
+    'ResetIntent': function () {
+        this.handler.state = states.RESETMODE;
+        
+        this.emit(':ask', Data.phrases.MISSION_RESET, Data.phrases.MISSION_RESET_REPROMPT);
+    },
     
     'AMAZON.StopIntent': function () {
         this.emit('AMAZON.StopIntent');
@@ -214,9 +267,14 @@ var waypointModeHandlers = Alexa.CreateStateHandler(states.WAYPOINTMODE, {
 });
 
 exports.handler = function (event, context, callback) {
+    console.log(`Node.js version: ${process.version}`);
+
     var alexa = Alexa.handler(event, context);
     alexa.appId = "amzn1.ask.skill.3ef12585-21e5-4396-a55b-40f0fc900b84";
     alexa.dynamoDBTableName = 'mars-rover-mission-table';
-    alexa.registerHandlers(newSessionHandlers, briefingModeHandlers, waypointModeHandlers);
+    alexa.registerHandlers(newSessionHandlers, briefingModeHandlers, waypointModeHandlers, resetModeHandlers);
+    if (event && event.request && event.request.intent) {
+        console.log('calling alexa.execute for ' + event.request.intent.name);
+    }
     alexa.execute();
 };

@@ -126,6 +126,10 @@ var briefingModeHandlers = Alexa.CreateStateHandler(states.BRIEFINGMODE, {
     'StatusIntent': function() {
         this.handler.state = states.WAYPOINTMODE;
         this.emitWithState('StatusIntent');
+    },
+
+    'Unhandled': function() {
+        this.emit('AMAZON.StopIntent');
     }
 
 });

@@ -1,9 +1,40 @@
 /* jshint esversion: 6, node: true */
 "use strict";
 
-require('./polyfill')
+const appId = "amzn1.ask.skill.3ef12585-21e5-4396-a55b-40f0fc900b84";
+const dynamoDBTableName = 'mars-rover-mission-table';
+
+var AWS = require('aws-sdk');
+var useXRAY = (process.env.AWS_XRAY_DAEMON_ADDRESS);
+if (useXRAY) {
+    var AWSXRay = require('aws-xray-sdk-core');
+    AWS = AWSXRay.captureAWS(AWS);
+    var AWSXRayUtil = require('./aws-xray-utils');
+}
+
+//require('./polyfill')
 var Alexa = require('alexa-sdk');
 var Data = require("./data");
+
+var handler =  function (event, context, callback) {
+    console.log(`Node.js version: ${process.version}`);
+
+    var alexa = Alexa.handler(event, context, callback);
+    alexa.appId = appId;
+    alexa.dynamoDBTableName = dynamoDBTableName;
+    alexa.registerHandlers(newSessionHandlers, briefingModeHandlers, waypointModeHandlers, resetModeHandlers);
+    if (event && event.request && event.request.intent) {
+        console.log('calling alexa.execute for ' + event.request.intent.name);
+    }
+    alexa.execute();
+};
+
+if (AWSXRay) {
+    handler = AWSXRayUtil.captureLambdaHandler(handler);
+}
+
+exports.handler = handler;
+
 
 var states = {
     NONE: '',
@@ -48,8 +79,8 @@ var newSessionHandlers = {
         var cardContent = Data.phrases.WELCOME;
 
         var imageObj = {
-            smallImageUrl: 'https://s3.amazonaws.com/kjhsoftware-alexa-skills/mars-rover-mission/images/mer-card-small.jpg',
-            largeImageUrl: 'https://s3.amazonaws.com/kjhsoftware-alexa-skills/mars-rover-mission/images/mer-card-large.jpg'
+            smallImageUrl: 'https://d1xpa9a5u0290.cloudfront.net/mars-rover-mission/images/mer-card-small.jpg',
+            largeImageUrl: 'https://d1xpa9a5u0290.cloudfront.net/mars-rover-mission/images/mer-card-large.jpg'
         };
 
         this.emit(':askWithCard', message, Data.phrases.WELCOME_REPROMPT, cardTitle, cardContent, imageObj);
@@ -269,16 +300,3 @@ var waypointModeHandlers = Alexa.CreateStateHandler(states.WAYPOINTMODE, {
         this.emit(':ask', message, message);
     }
 });
-
-exports.handler = function (event, context, callback) {
-    console.log(`Node.js version: ${process.version}`);
-
-    var alexa = Alexa.handler(event, context);
-    alexa.appId = "amzn1.ask.skill.3ef12585-21e5-4396-a55b-40f0fc900b84";
-    alexa.dynamoDBTableName = 'mars-rover-mission-table';
-    alexa.registerHandlers(newSessionHandlers, briefingModeHandlers, waypointModeHandlers, resetModeHandlers);
-    if (event && event.request && event.request.intent) {
-        console.log('calling alexa.execute for ' + event.request.intent.name);
-    }
-    alexa.execute();
-};

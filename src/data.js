@@ -1,10 +1,17 @@
 /* jshint esversion: 6, node: true */
 "use strict";
+/*
+S3
+https://s3.amazonaws.com/kjhsoftware-alexa-skills/mars-rover-mission/...
+
+CloudFront
+https://d1xpa9a5u0290.cloudfront.net/mars-rover-mission/...
+*/
 
 module.exports.phrases = {
     SKILL_NAME: "Mars Rover Mission",
-    INTRO_SOUND: "<audio src=\"https://s3.amazonaws.com/kjhsoftware-alexa-skills/mars-rover-mission/sounds/intro.mp3\" /> ",
-    BEEP_SOUND: "<audio src=\"https://s3.amazonaws.com/kjhsoftware-alexa-skills/mars-rover-mission/sounds/beep.mp3\" /> ",
+    INTRO_SOUND: "<audio src=\"https://d1xpa9a5u0290.cloudfront.net/mars-rover-mission/sounds/intro.mp3\" /> ",
+    BEEP_SOUND: "<audio src=\"https://d1xpa9a5u0290.cloudfront.net/mars-rover-mission/sounds/beep.mp3\" /> ",
     WELCOME_PRE : "Welcome to Mars Rover Mission.",
     WELCOME : "A slow-paced adventure game where you control a Mars exploration rover one day at a time - literally. ",
     WELCOME_PROMPT: 'Would you like to play a game?',

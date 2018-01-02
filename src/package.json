@@ -1,10 +1,11 @@
 {
   "name": "mars-rover-mission",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "Mars Rover Mission Alexa Skill",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "cat .lambdaignore | xargs zip -9qyr Archive.zip . -x && aws --profile alexa.developer lambda update-function-code --function-name MarsRoverMission-Alexa-CustomSkill --zip-file fileb://Archive.zip"
   },
   "keywords": [
     "alexa"
@@ -12,6 +13,7 @@
   "author": "KJH Software LLC",
   "license": "ISC",
   "dependencies": {
-    "alexa-sdk": "^1.0.6"
+    "alexa-sdk": "^1.0.24",
+    "aws-xray-sdk": "^1.1.6"
   }
 }

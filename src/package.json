@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "cat .lambdaignore | xargs zip -9qyr Archive.zip . -x && aws --profile alexa.developer lambda update-function-code --function-name MarsRoverMission-Alexa-CustomSkill --zip-file fileb://Archive.zip"
+    "deploy": "cat .zipignore | xargs zip -9qyr Archive.zip . -x && aws --profile alexa.developer lambda update-function-code --function-name MarsRoverMission-Alexa-CustomSkill --zip-file fileb://Archive.zip"
   },
   "keywords": [
     "alexa"
